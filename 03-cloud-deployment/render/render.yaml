@@ -12,8 +12,9 @@ services:
   - type: web
     name: ai-agent
     runtime: python
-    region: singapore         # Chọn region gần user nhất
-    plan: free                # free | starter | standard | pro
+    region: singapore
+    plan: free
+    rootDir: 03-cloud-deployment/railway
 
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT
