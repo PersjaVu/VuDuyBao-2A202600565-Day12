@@ -6,11 +6,12 @@
 
 ---
 
-## Public URL
+## Public URLs
 
-```
-https://ai-agent-production.onrender.com
-```
+| Platform | URL |
+|----------|-----|
+| Render | https://ai-agent-final-6iqz.onrender.com |
+| Railway | https://ai-agent-day12-production.up.railway.app |
 
 > **Note:** Render free tier sleeps after 15 minutes of inactivity. First request may take ~30s to wake up.
 
@@ -49,7 +50,7 @@ https://ai-agent-production.onrender.com
 ### Health Check
 
 ```bash
-curl https://ai-agent-production.onrender.com/health
+curl https://ai-agent-final-6iqz.onrender.com/health
 ```
 
 Expected:
@@ -68,7 +69,7 @@ Expected:
 ### Readiness Check
 
 ```bash
-curl https://ai-agent-production.onrender.com/ready
+curl https://ai-agent-final-6iqz.onrender.com/ready
 ```
 
 Expected:
@@ -79,7 +80,7 @@ Expected:
 ### API Test (with authentication)
 
 ```bash
-curl -X POST https://ai-agent-production.onrender.com/ask \
+curl -X POST https://ai-agent-final-6iqz.onrender.com/ask \
   -H "X-API-Key: YOUR_AGENT_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"user_id": "test", "question": "Hello, what can you do?"}'
@@ -99,7 +100,7 @@ Expected:
 ### Authentication Required (401)
 
 ```bash
-curl -X POST https://ai-agent-production.onrender.com/ask \
+curl -X POST https://ai-agent-final-6iqz.onrender.com/ask \
   -H "Content-Type: application/json" \
   -d '{"user_id": "test", "question": "Hello"}'
 # Expected: 401 Unauthorized
@@ -111,7 +112,7 @@ curl -X POST https://ai-agent-production.onrender.com/ask \
 # Gửi 15 requests → request 11+ sẽ bị block
 for i in $(seq 1 15); do
   curl -s -o /dev/null -w "%{http_code}\n" \
-    -X POST https://ai-agent-production.onrender.com/ask \
+    -X POST https://ai-agent-final-6iqz.onrender.com/ask \
     -H "X-API-Key: YOUR_AGENT_API_KEY" \
     -H "Content-Type: application/json" \
     -d "{\"user_id\": \"rate_test\", \"question\": \"test $i\"}"
@@ -123,13 +124,13 @@ done
 
 ```bash
 # Message 1
-curl -X POST https://ai-agent-production.onrender.com/ask \
+curl -X POST https://ai-agent-final-6iqz.onrender.com/ask \
   -H "X-API-Key: YOUR_AGENT_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"user_id": "conv_test", "question": "My name is Alice"}'
 
 # Message 2 — should reference previous message
-curl -X POST https://ai-agent-production.onrender.com/ask \
+curl -X POST https://ai-agent-final-6iqz.onrender.com/ask \
   -H "X-API-Key: YOUR_AGENT_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"user_id": "conv_test", "question": "What did I say before?"}'
