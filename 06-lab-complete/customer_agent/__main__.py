@@ -134,6 +134,22 @@ async def main() -> None:
                     status_code=400,
                 )
 
+            # Demo-mode fallback when no API key is configured
+            if not os.getenv("OPENROUTER_API_KEY"):
+                return JSONResponse({
+                    "role": "assistant",
+                    "content": (
+                        "[Demo mode — OPENROUTER_API_KEY not configured]\n\n"
+                        f"Question received: *{question}*\n\n"
+                        "With a real API key our multi-agent pipeline would:\n"
+                        "1. **Customer Agent** understands the question\n"
+                        "2. Routes to **Law Agent** via A2A\n"
+                        "3. **Law Agent** delegates in parallel to **Tax Agent** and **Compliance Agent**\n"
+                        "4. Synthesises a comprehensive legal response\n\n"
+                        "Set `OPENROUTER_API_KEY` in Render → Environment for live responses."
+                    ),
+                })
+
             trace_id = str(uuid4())
             context_id = str(uuid4())
 

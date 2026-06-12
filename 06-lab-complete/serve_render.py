@@ -227,12 +227,19 @@ async def proxy_messages(request: Request):
     _check_budget(client_ip)
 
     body = await request.body()
-    async with httpx.AsyncClient(timeout=60.0) as c:
-        res = await c.post(
-            f"{CUSTOMER_AGENT_URL}/messages",
-            content=body,
-            headers={"Content-Type": "application/json"},
-        )
+    try:
+        async with httpx.AsyncClient(timeout=60.0) as c:
+            res = await c.post(
+                f"{CUSTOMER_AGENT_URL}/messages",
+                content=body,
+                headers={"Content-Type": "application/json"},
+            )
+    except httpx.ConnectError:
+        log("customer_agent_unavailable", url=CUSTOMER_AGENT_URL)
+        raise HTTPException(status_code=503, detail="Customer agent is starting up, please retry in a moment")
+    except httpx.TimeoutException:
+        log("customer_agent_timeout", url=CUSTOMER_AGENT_URL)
+        raise HTTPException(status_code=504, detail="Customer agent timed out")
     headers = {
         k: v for k, v in res.headers.items()
         if k.lower() not in ("content-encoding", "content-length", "transfer-encoding")
