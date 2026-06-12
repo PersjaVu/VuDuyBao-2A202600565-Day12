@@ -12,8 +12,18 @@ services:
     envVars:
       - key: ENVIRONMENT
         value: production
+      - key: LOG_LEVEL
+        value: INFO
       - key: REGISTRY_URL
         value: http://localhost:10000
+      - key: CUSTOMER_AGENT_URL
+        value: http://127.0.0.1:10100
+      - key: AGENT_API_KEY
+        generateValue: true
+      - key: RATE_LIMIT_PER_MINUTE
+        value: "20"
+      - key: MONTHLY_REQUEST_LIMIT
+        value: "500"
       - key: OPENROUTER_MODEL
         value: anthropic/claude-haiku-3-5
       - key: OPENROUTER_API_KEY
