@@ -1,0 +1,45 @@
+# ============================================================
+# render.yaml — Render Blueprint for Final Project
+#
+# Deploy:
+#   1. Push to GitHub
+#   2. render.com → New → Blueprint → connect repo
+#   3. Render reads this file → creates web service + Redis
+#   4. Click Apply → Done!
+# ============================================================
+
+services:
+  - type: web
+    name: ai-agent-final
+    runtime: docker
+    region: singapore
+    plan: free
+
+    healthCheckPath: /health
+    autoDeploy: true
+
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: APP_VERSION
+        value: "1.0.0"
+      - key: LOG_LEVEL
+        value: INFO
+      - key: AGENT_API_KEY
+        generateValue: true
+      - key: RATE_LIMIT_PER_MINUTE
+        value: "10"
+      - key: MONTHLY_BUDGET_USD
+        value: "10.0"
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: ai-agent-final-redis
+          property: connectionString
+      - key: OPENAI_API_KEY
+        sync: false
+
+  - type: redis
+    name: ai-agent-final-redis
+    plan: free
+    maxmemoryPolicy: allkeys-lru
