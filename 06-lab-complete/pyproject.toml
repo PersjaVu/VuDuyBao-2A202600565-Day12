@@ -11,6 +11,7 @@ dependencies = [
     "uvicorn>=0.34.0",
     "httpx>=0.28.0",
     "python-dotenv>=1.1.0",
+    "redis>=5.0.0",
     "pydantic>=2.11.0",
     "python-pptx>=1.0.2",
     "cairosvg>=2.9.0",

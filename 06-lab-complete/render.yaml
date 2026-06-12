@@ -21,10 +21,21 @@ services:
       - key: AGENT_API_KEY
         generateValue: true
       - key: RATE_LIMIT_PER_MINUTE
-        value: "20"
+        value: "10"
       - key: MONTHLY_REQUEST_LIMIT
         value: "500"
       - key: OPENROUTER_MODEL
         value: anthropic/claude-haiku-3-5
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: legal-agent-redis
+          property: connectionString
       - key: OPENROUTER_API_KEY
         sync: false
+
+  - type: redis
+    name: legal-agent-redis
+    plan: free
+    maxmemoryPolicy: allkeys-lru
+    ipAllowList: []

@@ -30,11 +30,41 @@ from fastapi.security import APIKeyHeader
 from fastapi.staticfiles import StaticFiles
 
 # ── Config from env vars (no hardcoded values)
-AGENT_API_KEY     = os.getenv("AGENT_API_KEY", "dev-key-change-me")
-RATE_LIMIT        = int(os.getenv("RATE_LIMIT_PER_MINUTE", "20"))
-MONTHLY_REQ_LIMIT = int(os.getenv("MONTHLY_REQUEST_LIMIT", "500"))
+AGENT_API_KEY      = os.getenv("AGENT_API_KEY", "dev-key-change-me")
+RATE_LIMIT         = int(os.getenv("RATE_LIMIT_PER_MINUTE", "10"))
+MONTHLY_REQ_LIMIT  = int(os.getenv("MONTHLY_REQUEST_LIMIT", "500"))
 CUSTOMER_AGENT_URL = os.getenv("CUSTOMER_AGENT_URL", "http://127.0.0.1:19100")
-LOG_LEVEL         = os.getenv("LOG_LEVEL", "INFO")
+LOG_LEVEL          = os.getenv("LOG_LEVEL", "INFO")
+REDIS_URL          = os.getenv("REDIS_URL", "")
+
+# ── Stateless session storage (Redis with in-memory fallback)
+try:
+    import redis as _redis_lib
+    _redis = _redis_lib.from_url(REDIS_URL or "redis://localhost:6379/0", decode_responses=True)
+    _redis.ping()
+    USE_REDIS = True
+    log("redis_connected", url=REDIS_URL)
+except Exception:
+    USE_REDIS = False
+    _memory_store: dict = {}
+    log("redis_unavailable", note="using in-memory fallback")
+
+
+def _get_history(user_id: str) -> list:
+    key = f"history:{user_id}"
+    if USE_REDIS:
+        raw = _redis.get(key)
+        return json.loads(raw) if raw else []
+    return _memory_store.get(key, [])
+
+
+def _save_history(user_id: str, history: list) -> None:
+    trimmed = history[-20:]
+    key = f"history:{user_id}"
+    if USE_REDIS:
+        _redis.setex(key, 3600, json.dumps(trimmed))
+    else:
+        _memory_store[key] = trimmed
 
 # ── Structured JSON logging (12-factor: log to stdout)
 logging.basicConfig(level=getattr(logging, LOG_LEVEL.upper(), logging.INFO),
@@ -224,13 +254,26 @@ async def api_ask(
     question = body.get("question") or body.get("message") or body.get("content")
     if not question:
         raise HTTPException(status_code=422, detail="Field 'question' is required")
+
+    user_id = body.get("user_id", api_key[:8])
+    history = _get_history(user_id)
+
     async with httpx.AsyncClient(timeout=60.0) as c:
         res = await c.post(
             f"{CUSTOMER_AGENT_URL}/messages",
             json={"content": question},
             headers={"Content-Type": "application/json"},
         )
-    return res.json()
+    data = res.json()
+    answer = data.get("content", "")
+
+    history.extend([
+        {"role": "user", "content": question},
+        {"role": "assistant", "content": answer},
+    ])
+    _save_history(user_id, history)
+
+    return {**data, "user_id": user_id, "history_length": len(history)}
 
 
 # ── Agent card proxy (no auth needed)
