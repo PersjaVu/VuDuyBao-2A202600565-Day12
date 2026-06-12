@@ -33,7 +33,7 @@ from fastapi.staticfiles import StaticFiles
 AGENT_API_KEY     = os.getenv("AGENT_API_KEY", "dev-key-change-me")
 RATE_LIMIT        = int(os.getenv("RATE_LIMIT_PER_MINUTE", "20"))
 MONTHLY_REQ_LIMIT = int(os.getenv("MONTHLY_REQUEST_LIMIT", "500"))
-CUSTOMER_AGENT_URL = os.getenv("CUSTOMER_AGENT_URL", "http://127.0.0.1:10100")
+CUSTOMER_AGENT_URL = os.getenv("CUSTOMER_AGENT_URL", "http://127.0.0.1:19100")
 LOG_LEVEL         = os.getenv("LOG_LEVEL", "INFO")
 
 # ── Structured JSON logging (12-factor: log to stdout)

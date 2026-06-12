@@ -1,4 +1,4 @@
-"""Registry Service — port 10000.
+"""Registry Service — port 19000.
 
 A lightweight FastAPI service that allows agents to self-register and
 clients to discover agent endpoints by task name.
@@ -84,5 +84,5 @@ async def health() -> dict:
 
 
 if __name__ == "__main__":
-    logger.info("Starting Registry on port 10000")
-    uvicorn.run(app, host="0.0.0.0", port=10000, log_level="info")
+    logger.info("Starting Registry on port 19000")
+    uvicorn.run(app, host="0.0.0.0", port=19000, log_level="info")

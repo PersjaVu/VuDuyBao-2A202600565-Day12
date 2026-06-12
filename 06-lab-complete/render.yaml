@@ -15,9 +15,9 @@ services:
       - key: LOG_LEVEL
         value: INFO
       - key: REGISTRY_URL
-        value: http://localhost:10000
+        value: http://localhost:19000
       - key: CUSTOMER_AGENT_URL
-        value: http://127.0.0.1:10100
+        value: http://127.0.0.1:19100
       - key: AGENT_API_KEY
         generateValue: true
       - key: RATE_LIMIT_PER_MINUTE

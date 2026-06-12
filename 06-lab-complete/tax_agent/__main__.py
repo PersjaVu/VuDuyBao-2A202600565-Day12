@@ -1,4 +1,4 @@
-"""Tax Agent server entry point — port 10102."""
+"""Tax Agent server entry point — port 19102."""
 
 from __future__ import annotations
 
@@ -27,7 +27,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-PORT = 10102
+PORT = 19102
 AGENT_ENDPOINT = f"http://localhost:{PORT}"
 REGISTRY_URL = os.getenv("REGISTRY_URL", "http://localhost:10000")
 

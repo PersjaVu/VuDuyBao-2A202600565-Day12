@@ -1,4 +1,4 @@
-"""Compliance Agent server entry point — port 10103."""
+"""Compliance Agent server entry point — port 19103."""
 
 from __future__ import annotations
 
@@ -25,7 +25,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-PORT = 10103
+PORT = 19103
 AGENT_ENDPOINT = f"http://localhost:{PORT}"
 
 
