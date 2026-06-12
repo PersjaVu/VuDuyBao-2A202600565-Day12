@@ -116,7 +116,7 @@ curl https://ai-agent-day12-production.up.railway.app/health
 ### Exercise 3.2 — Deploy Render
 
 **Deployed URL:** https://ai-agent-7so8.onrender.com
-
+(Đợi tầm 1 phút để service hoạt động)
 ```bash
 curl https://ai-agent-7so8.onrender.com/health
 ```
@@ -354,3 +354,74 @@ Instances used: {instance-a1b2c3, instance-d4e5f6, instance-g7h8i9}
 ```
 
 **Deployed URL:** https://vuduybao-2a202600565-day12.onrender.com
+
+---
+
+## Lab Assignment: Multi-Agent A2A System (06-lab-complete)
+
+### Phần 1 — Direct LLM Calling
+
+- [x] Chạy `stages/stage_1_direct_llm/main.py` thành công
+- [x] Hiểu cách khởi tạo LLM với `get_llm()` trong `common/llm.py`
+- [x] Hiểu cấu trúc `SystemMessage` + `HumanMessage`
+- [x] Bài tập 1.1: Thay đổi biến `QUESTION` thành câu hỏi pháp lý khác
+- [x] Bài tập 1.2: Thêm `temperature=0.3` vào `get_llm()`
+
+### Phần 2 — LLM + RAG & Tools
+
+- [x] Chạy `stages/stage_2_rag_tools/main.py` thành công
+- [x] Hiểu `@tool` decorator và `.bind_tools()`
+- [x] Hiểu cấu trúc `LEGAL_KNOWLEDGE` keyword-based lookup
+- [x] Bài tập 2.1: Thêm entry luật lao động vào knowledge base
+- [x] Bài tập 2.2: Tạo tool `check_statute_of_limitations`
+
+### Phần 3 — Single Agent với ReAct
+
+- [x] Chạy `stages/stage_3_single_agent/main.py` thành công
+- [x] Hiểu `create_react_agent` — tự động Reason → Act → Observe loop
+- [x] So sánh được Stage 2 (manual) vs Stage 3 (automatic orchestration)
+- [x] Bài tập 3.1: Thêm tool `search_case_law`
+- [x] Bài tập 3.2: Debug reasoning với verbose output
+
+### Phần 4 — Multi-Agent In-Process
+
+- [x] Chạy `stages/stage_4_milti_agent/main.py` thành công
+- [x] Hiểu `class State(TypedDict)` — shared state giữa các nodes
+- [x] Hiểu `Send()` API — dispatch parallel tasks
+- [x] Hiểu `graph.add_node()` và `graph.add_edge()` — luồng điều khiển
+- [x] Bài tập 4.1: Thêm `privacy_agent` (GDPR & privacy law)
+- [x] Bài tập 4.2: Implement conditional routing theo keyword
+
+### Phần 5 — Distributed A2A System
+
+- [x] Khởi động toàn bộ hệ thống với `start_all.sh`
+- [x] Test end-to-end với `test_client.py`
+- [x] Quan sát logs — Registry discovery, agent registration
+- [x] Bài tập 5.1: Trace `trace_id` qua Customer → Law → Tax/Compliance
+- [x] Bài tập 5.2: Test dynamic discovery khi Tax Agent bị tắt
+- [x] Bài tập 5.3: Sửa system prompt Tax Agent, restart và test
+
+### Câu hỏi ôn tập
+
+**1. Khi nào nên dùng single agent thay vì multi-agent?**
+Single agent khi task đơn lẻ, không cần chuyên môn hóa, latency quan trọng. Multi-agent khi có nhiều domains độc lập, cần parallel processing, hoặc muốn isolate failure.
+
+**2. Ưu điểm A2A so với gRPC/REST thông thường?**
+A2A có schema chuẩn cho agent discovery, task lifecycle (submit/stream/cancel), và metadata propagation (trace_id, context_id). gRPC/REST thông thường cần tự định nghĩa protocol.
+
+**3. Prevent infinite delegation loops?**
+Truyền `depth` qua metadata, từ chối request khi `depth > MAX_DEPTH` (project này dùng `depth=3`).
+
+**4. Tại sao cần Registry? Có thể hardcode URLs không?**
+Registry cho phép dynamic discovery — agent có thể scale, restart, đổi port mà client không cần biết. Hardcode URLs không scale và gây downtime khi infrastructure thay đổi.
+
+### Bài tập cộng điểm
+
+- [x] Vite frontend demo tương tác với multi-agent system (A2A protocol)
+- [x] Đo latency: ~35-45 giây cho full chain (Customer → Law → Tax → OpenRouter × 3 lần)
+- [x] Deploy lên Render với Docker multi-stage build
+
+**Phương án giảm latency:**
+- Gọi Tax Agent và Compliance Agent **song song** (`asyncio.gather`) thay vì tuần tự → giảm ~40%
+- Dùng model nhỏ hơn (`claude-haiku` thay vì `claude-sonnet`) → giảm LLM response time ~60%
+- Cache kết quả registry discovery (TTL 60s) → giảm overhead HTTP lookup
