@@ -113,6 +113,14 @@ railway domain
 curl https://ai-agent-day12-production.up.railway.app/health
 ```
 
+### Exercise 3.2 — Deploy Render
+
+**Deployed URL:** https://ai-agent-7so8.onrender.com
+
+```bash
+curl https://ai-agent-7so8.onrender.com/health
+```
+
 ### Exercise 3.2 — So sánh `railway.toml` vs `render.yaml`
 
 | Khía cạnh | `railway.toml` | `render.yaml` |
