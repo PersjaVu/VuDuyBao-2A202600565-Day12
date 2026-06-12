@@ -83,7 +83,11 @@ jobs:
     steps:
       - name: Trigger Render deploy hook
         run: |
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-            -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}")
+          HOOK="${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
+          if [ -z "$HOOK" ]; then
+            echo "RENDER_DEPLOY_HOOK_URL not set — skipping deploy trigger"
+            exit 0
+          fi
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$HOOK")
           echo "Render response: $STATUS"
-          [ "$STATUS" = "200" ] || [ "$STATUS" = "201" ]
+          [[ "$STATUS" =~ ^2 ]] || (echo "Unexpected status $STATUS" && exit 1)
