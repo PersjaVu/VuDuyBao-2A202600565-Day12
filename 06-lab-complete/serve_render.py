@@ -227,19 +227,36 @@ async def proxy_messages(request: Request):
     _check_budget(client_ip)
 
     body = await request.body()
-    try:
-        async with httpx.AsyncClient(timeout=60.0) as c:
-            res = await c.post(
-                f"{CUSTOMER_AGENT_URL}/messages",
-                content=body,
-                headers={"Content-Type": "application/json"},
-            )
-    except httpx.ConnectError:
-        log("customer_agent_unavailable", url=CUSTOMER_AGENT_URL)
-        raise HTTPException(status_code=503, detail="Customer agent is starting up, please retry in a moment")
-    except httpx.TimeoutException:
-        log("customer_agent_timeout", url=CUSTOMER_AGENT_URL)
-        raise HTTPException(status_code=504, detail="Customer agent timed out")
+
+    # Retry for up to 90 seconds to handle Render free-tier cold starts
+    # where heavy Python imports (langgraph, a2a) delay agent startup by 60-90s
+    deadline = time.time() + 90
+    attempt = 0
+    res = None
+    while True:
+        attempt += 1
+        try:
+            async with httpx.AsyncClient(timeout=60.0) as c:
+                res = await c.post(
+                    f"{CUSTOMER_AGENT_URL}/messages",
+                    content=body,
+                    headers={"Content-Type": "application/json"},
+                )
+            break
+        except httpx.ConnectError:
+            remaining = deadline - time.time()
+            if remaining <= 0:
+                log("customer_agent_unavailable", url=CUSTOMER_AGENT_URL, attempts=attempt)
+                raise HTTPException(
+                    status_code=503,
+                    detail="Service warming up after cold start — please retry in 1-2 minutes",
+                    headers={"Retry-After": "30"},
+                )
+            log("customer_agent_retry", attempt=attempt, retry_in=5)
+            await asyncio.sleep(min(5.0, remaining))
+        except httpx.TimeoutException:
+            log("customer_agent_timeout", url=CUSTOMER_AGENT_URL)
+            raise HTTPException(status_code=504, detail="Customer agent timed out")
     headers = {
         k: v for k, v in res.headers.items()
         if k.lower() not in ("content-encoding", "content-length", "transfer-encoding")
