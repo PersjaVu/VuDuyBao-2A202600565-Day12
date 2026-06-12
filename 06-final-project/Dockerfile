@@ -9,7 +9,7 @@ FROM python:3.11-slim AS builder
 WORKDIR /build
 RUN apt-get update && apt-get install -y gcc && rm -rf /var/lib/apt/lists/*
 COPY requirements.txt .
-RUN pip install --no-cache-dir --user -r requirements.txt
+RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
 
 # Stage 2: Runtime
 FROM python:3.11-slim AS runtime
@@ -17,15 +17,15 @@ FROM python:3.11-slim AS runtime
 RUN groupadd -r agent && useradd -r -g agent -d /app agent
 WORKDIR /app
 
-COPY --from=builder /root/.local /home/agent/.local
+# Install deps from builder into system path — always discoverable
+COPY --from=builder /install /usr/local
 COPY app/ ./app/
 COPY utils/ ./utils/
 
 RUN chown -R agent:agent /app
 USER agent
 
-ENV PATH=/home/agent/.local/bin:$PATH \
-    PYTHONPATH=/app \
+ENV PYTHONPATH=/app \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
