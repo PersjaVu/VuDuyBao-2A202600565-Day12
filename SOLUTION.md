@@ -291,3 +291,66 @@ Kết quả: 5 requests route sang 3 instances khác nhau, nhưng history đủ 
 Instances used: {instance-a1b2c3, instance-d4e5f6, instance-g7h8i9}
 ✅ Session history preserved across all instances via Redis!
 ```
+
+### Checkpoint 5
+
+- [x] Implement health và readiness checks
+- [x] Implement graceful shutdown
+- [x] Refactor code thành stateless
+- [x] Hiểu load balancing với Nginx
+- [x] Test stateless design
+
+---
+
+## Part 6: Final Project — Production AI Agent
+
+### Checkpoint 6
+
+**Functional:**
+
+- [x] Agent trả lời câu hỏi qua REST API
+- [x] Support conversation history
+- [ ] Streaming responses (optional)
+
+**Non-functional:**
+
+- [x] Dockerized với multi-stage build
+- [x] Config từ environment variables
+- [x] API key authentication
+- [x] Rate limiting (10 req/min per user)
+- [x] Cost guard ($10/month per user)
+- [x] Health check endpoint
+- [x] Readiness check endpoint
+- [x] Graceful shutdown
+- [x] Stateless design (state trong Redis)
+- [x] Structured JSON logging
+- [x] Deploy lên Render (xem DEPLOYMENT.md)
+- [x] Public URL hoạt động
+
+### 🏗 Architecture
+
+```
+┌─────────────┐
+│   Client    │
+└──────┬──────┘
+       │
+       ▼
+┌─────────────────┐
+│  Nginx (LB)     │
+└──────┬──────────┘
+       │
+       ├─────────┬─────────┐
+       ▼         ▼         ▼
+   ┌──────┐  ┌──────┐  ┌──────┐
+   │Agent1│  │Agent2│  │Agent3│
+   └───┬──┘  └───┬──┘  └───┬──┘
+       │         │         │
+       └─────────┴─────────┘
+                 │
+                 ▼
+           ┌──────────┐
+           │  Redis   │
+           └──────────┘
+```
+
+**Deployed URL:** https://vuduybao-2a202600565-day12.onrender.com
