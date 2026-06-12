@@ -126,6 +126,13 @@ async def main() -> None:
                     if m.get("role") == "user" and m.get("content"):
                         question = m["content"]
                         break
+            # A2A JSON-RPC: {"jsonrpc":"2.0","method":"message/send","params":{"message":{"parts":[{"kind":"text","text":"..."}]}}}
+            if not question and body.get("jsonrpc") == "2.0":
+                parts = body.get("params", {}).get("message", {}).get("parts", [])
+                for part in parts:
+                    if isinstance(part, dict) and part.get("kind") == "text" and part.get("text"):
+                        question = part["text"]
+                        break
             if not question:
                 return JSONResponse(
                     {"error": "No question found", "received": body},
