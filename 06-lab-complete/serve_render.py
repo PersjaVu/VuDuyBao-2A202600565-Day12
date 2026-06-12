@@ -186,14 +186,13 @@ async def ready():
     raise HTTPException(status_code=503, detail="Customer agent not ready")
 
 
-# ── Protected /messages endpoint (auth + rate limit + cost guard)
+# ── /messages — called by the built-in frontend (no auth required,
+#    rate-limited by IP to prevent abuse)
 @app.post("/messages")
-async def proxy_messages(
-    request: Request,
-    api_key: str = Security(verify_api_key),
-):
-    _check_rate_limit(api_key)
-    _check_budget(api_key)
+async def proxy_messages(request: Request):
+    client_ip = request.client.host if request.client else "unknown"
+    _check_rate_limit(client_ip)
+    _check_budget(client_ip)
 
     body = await request.body()
     async with httpx.AsyncClient(timeout=60.0) as c:
@@ -210,6 +209,28 @@ async def proxy_messages(
         status_code=res.status_code,
         headers=headers,
     )
+
+
+# ── /api/ask — external REST API (requires X-API-Key auth)
+@app.post("/api/ask")
+async def api_ask(
+    request: Request,
+    api_key: str = Security(verify_api_key),
+):
+    """External API endpoint — requires X-API-Key header."""
+    _check_rate_limit(api_key)
+    _check_budget(api_key)
+    body = await request.json()
+    question = body.get("question") or body.get("message") or body.get("content")
+    if not question:
+        raise HTTPException(status_code=422, detail="Field 'question' is required")
+    async with httpx.AsyncClient(timeout=60.0) as c:
+        res = await c.post(
+            f"{CUSTOMER_AGENT_URL}/messages",
+            json={"content": question},
+            headers={"Content-Type": "application/json"},
+        )
+    return res.json()
 
 
 # ── Agent card proxy (no auth needed)
