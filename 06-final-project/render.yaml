@@ -43,3 +43,4 @@ services:
     name: ai-agent-final-redis
     plan: free
     maxmemoryPolicy: allkeys-lru
+    ipAllowList: []
