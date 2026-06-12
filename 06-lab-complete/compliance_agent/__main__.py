@@ -54,7 +54,6 @@ async def _register_with_retry(max_attempts: int = 10, delay: float = 2.0) -> No
 
 
 async def main() -> None:
-    await _register_with_retry()
 
     agent_card = AgentCard(
         name="Compliance Agent",
@@ -95,6 +94,7 @@ async def main() -> None:
     config = uvicorn.Config(app, host="0.0.0.0", port=PORT, log_level="info")
     server = uvicorn.Server(config)
     logger.info("Compliance Agent listening on port %d", PORT)
+    asyncio.create_task(_register_with_retry())
     await server.serve()
 
 
