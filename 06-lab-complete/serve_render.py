@@ -25,7 +25,7 @@ from datetime import datetime, timezone
 import httpx
 import uvicorn
 from fastapi import FastAPI, HTTPException, Request, Security
-from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.responses import JSONResponse, Response, StreamingResponse
 from fastapi.security import APIKeyHeader
 from fastapi.staticfiles import StaticFiles
 
@@ -231,13 +231,15 @@ async def proxy_messages(request: Request):
             content=body,
             headers={"Content-Type": "application/json"},
         )
-    headers = dict(res.headers)
-    headers.pop("content-encoding", None)
-    headers.pop("content-length", None)
-    return StreamingResponse(
-        res.aiter_raw(),
+    headers = {
+        k: v for k, v in res.headers.items()
+        if k.lower() not in ("content-encoding", "content-length", "transfer-encoding")
+    }
+    return Response(
+        content=res.content,
         status_code=res.status_code,
         headers=headers,
+        media_type=res.headers.get("content-type", "application/json"),
     )
 
 
