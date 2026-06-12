@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>A2A Multi-Agent Simulation</title>
+    <link rel="stylesheet" href="./style.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  </head>
+  <body>
+    <div class="app-container">
+      <header class="glass-header">
+        <div class="logo">
+          <i class="fa-solid fa-network-wired"></i>
+          <h1>A2A Multi-Agent <span>Simulator</span></h1>
+        </div>
+        <div class="status-badge">
+          <span class="dot pulse"></span>
+          System Online
+        </div>
+      </header>
+
+      <main class="main-content">
+        <!-- Panel Chat -->
+        <section class="chat-panel glass-panel">
+          <div class="chat-header">
+            <i class="fa-solid fa-user-tie"></i> Customer Interface
+          </div>
+          <div class="chat-history" id="chatHistory">
+            <div class="message system-msg">
+              Welcome to the A2A Legal Multi-Agent system. Try asking a complex legal question involving taxes or data privacy!
+            </div>
+          </div>
+          <div class="chat-input-area">
+            <input type="text" id="chatInput" placeholder="VD: Công ty bị rò rỉ dữ liệu khách hàng sẽ bị phạt thuế và luật thế nào?" autocomplete="off" />
+            <button id="sendBtn"><i class="fa-solid fa-paper-plane"></i></button>
+          </div>
+        </section>
+
+        <!-- Panel Visualizer -->
+        <section class="visualizer-panel glass-panel">
+          <div class="graph-container" id="graphContainer">
+            <!-- Luồng kết nối (SVG lines will be injected here) -->
+            <svg id="connectionLines" class="connections-svg">
+               <defs>
+                  <linearGradient id="glowLine" x1="0%" y1="0%" x2="100%" y2="0%">
+                     <stop offset="0%" stop-color="#3b82f6" stop-opacity="0" />
+                     <stop offset="50%" stop-color="#3b82f6" stop-opacity="1" />
+                     <stop offset="100%" stop-color="#3b82f6" stop-opacity="0" />
+                  </linearGradient>
+               </defs>
+            </svg>
+
+            <!-- Nodes -->
+            <div class="agent-node customer" id="node-customer" data-x="50" data-y="10">
+              <div class="icon"><i class="fa-solid fa-user-headset"></i></div>
+              <div class="name">Customer Agent</div>
+              <div class="port">Port: 10100</div>
+              <div class="status-indicator"></div>
+            </div>
+
+            <div class="agent-node law" id="node-law" data-x="50" data-y="40">
+              <div class="icon"><i class="fa-solid fa-scale-balanced"></i></div>
+              <div class="name">Law Agent</div>
+              <div class="port">Port: 10101 (Router)</div>
+              <div class="status-indicator"></div>
+            </div>
+
+            <div class="agent-node tax" id="node-tax" data-x="20" data-y="80">
+              <div class="icon"><i class="fa-solid fa-file-invoice-dollar"></i></div>
+              <div class="name">Tax Agent</div>
+              <div class="port">Port: 10102</div>
+              <div class="status-indicator"></div>
+            </div>
+
+            <div class="agent-node compliance" id="node-compliance" data-x="50" data-y="80">
+              <div class="icon"><i class="fa-solid fa-shield-halved"></i></div>
+              <div class="name">Compliance Agent</div>
+              <div class="port">Port: 10103</div>
+              <div class="status-indicator"></div>
+            </div>
+
+            <div class="agent-node privacy" id="node-privacy" data-x="80" data-y="80">
+              <div class="icon"><i class="fa-solid fa-user-lock"></i></div>
+              <div class="name">Privacy Agent</div>
+              <div class="port">Port: 10104</div>
+              <div class="status-indicator"></div>
+            </div>
+            
+          </div>
+        </section>
+      </main>
+    </div>
+    
+    <script type="module" src="/main.js"></script>
+  </body>
+</html>

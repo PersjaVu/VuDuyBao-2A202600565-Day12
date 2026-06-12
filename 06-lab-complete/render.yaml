@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: legal-multiagent
+    runtime: docker
+    region: singapore
+    plan: free
+    rootDir: 06-lab-complete
+
+    healthCheckPath: /health
+    autoDeploy: true
+
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: REGISTRY_URL
+        value: http://localhost:10000
+      - key: OPENROUTER_MODEL
+        value: anthropic/claude-haiku-3-5
+      - key: OPENROUTER_API_KEY
+        sync: false

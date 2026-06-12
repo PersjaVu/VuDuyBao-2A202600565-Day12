@@ -1,0 +1,16 @@
+.venv
+.env
+.git
+.DS_Store
+__pycache__
+*.pyc
+*.pyo
+docs/
+frontend-demo/node_modules/
+frontend-demo/dist/
+*.md
+.gitignore
+benchmark_latency.py
+dump.py
+test_client.py
+exercises/
