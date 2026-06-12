@@ -310,7 +310,7 @@ Instances used: {instance-a1b2c3, instance-d4e5f6, instance-g7h8i9}
 
 - [x] Agent trả lời câu hỏi qua REST API
 - [x] Support conversation history
-- [ ] Streaming responses (optional)
+- [x] Streaming responses (optional)
 
 **Non-functional:**
 
