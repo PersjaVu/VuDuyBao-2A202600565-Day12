@@ -25,7 +25,7 @@ from datetime import datetime, timezone
 import httpx
 import uvicorn
 from fastapi import FastAPI, HTTPException, Request, Security
-from fastapi.responses import JSONResponse, Response, StreamingResponse
+from fastapi.responses import JSONResponse, Response
 from fastapi.security import APIKeyHeader
 from fastapi.staticfiles import StaticFiles
 
@@ -36,35 +36,6 @@ MONTHLY_REQ_LIMIT  = int(os.getenv("MONTHLY_REQUEST_LIMIT", "500"))
 CUSTOMER_AGENT_URL = os.getenv("CUSTOMER_AGENT_URL", "http://127.0.0.1:19100")
 LOG_LEVEL          = os.getenv("LOG_LEVEL", "INFO")
 REDIS_URL          = os.getenv("REDIS_URL", "")
-
-# ── Stateless session storage (Redis with in-memory fallback)
-try:
-    import redis as _redis_lib
-    _redis = _redis_lib.from_url(REDIS_URL or "redis://localhost:6379/0", decode_responses=True)
-    _redis.ping()
-    USE_REDIS = True
-    log("redis_connected", url=REDIS_URL)
-except Exception:
-    USE_REDIS = False
-    _memory_store: dict = {}
-    log("redis_unavailable", note="using in-memory fallback")
-
-
-def _get_history(user_id: str) -> list:
-    key = f"history:{user_id}"
-    if USE_REDIS:
-        raw = _redis.get(key)
-        return json.loads(raw) if raw else []
-    return _memory_store.get(key, [])
-
-
-def _save_history(user_id: str, history: list) -> None:
-    trimmed = history[-20:]
-    key = f"history:{user_id}"
-    if USE_REDIS:
-        _redis.setex(key, 3600, json.dumps(trimmed))
-    else:
-        _memory_store[key] = trimmed
 
 # ── Structured JSON logging (12-factor: log to stdout)
 logging.basicConfig(level=getattr(logging, LOG_LEVEL.upper(), logging.INFO),
@@ -77,6 +48,37 @@ def log(event: str, **kwargs) -> None:
         "timestamp": datetime.now(timezone.utc).isoformat(),
         **kwargs,
     }), flush=True)
+
+
+# ── Stateless session storage (Redis with in-memory fallback)
+_memory_store: dict = {}
+_redis = None
+try:
+    import redis as _redis_lib
+    _redis = _redis_lib.from_url(REDIS_URL or "redis://localhost:6379/0", decode_responses=True)
+    _redis.ping()
+    USE_REDIS = True
+    log("redis_connected", url=REDIS_URL)
+except Exception:
+    USE_REDIS = False
+    log("redis_unavailable", note="using in-memory fallback")
+
+
+def _get_history(user_id: str) -> list:
+    key = f"history:{user_id}"
+    if USE_REDIS and _redis:
+        raw = _redis.get(key)
+        return json.loads(raw) if raw else []
+    return _memory_store.get(key, [])
+
+
+def _save_history(user_id: str, history: list) -> None:
+    trimmed = history[-20:]
+    key = f"history:{user_id}"
+    if USE_REDIS and _redis:
+        _redis.setex(key, 3600, json.dumps(trimmed))
+    else:
+        _memory_store[key] = trimmed
 
 
 # ── Rate limiter (sliding window per API key)

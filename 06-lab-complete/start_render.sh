@@ -1,34 +1,34 @@
 #!/bin/bash
-# Start all agents inside a single Render container, then start the proxy.
-set -e
+# Start all agents inside a single Render container.
+# IMPORTANT: serve_render.py must start FIRST so $PORT is bound before Render
+# scans for the primary port. Agents start in background afterwards.
 
 echo "=== Legal Multi-Agent System — Startup ==="
 
-# ── 1. Registry (port 10000)
-echo "[1/6] Starting Registry..."
-python -m registry &
-sleep 2
+# ── 1. Proxy server binds $PORT FIRST (Render detects this as the primary port)
+echo "[1/6] Starting Proxy Server on port ${PORT:-8080}..."
+python serve_render.py &
+PROXY_PID=$!
 
-# ── 2. Law Agent (port 10101)
-echo "[2/6] Starting Law Agent..."
+# Brief pause so the proxy has time to bind the socket before Render scans
+sleep 1
+
+# ── 2–6. Internal agents (background, register with retry so order doesn't matter)
+echo "[2/6] Starting Registry (port 19000)..."
+python -m registry &
+
+echo "[3/6] Starting Law Agent (port 19101)..."
 python -m law_agent &
 
-# ── 3. Tax Agent (port 10102)
-echo "[3/6] Starting Tax Agent..."
+echo "[4/6] Starting Tax Agent (port 19102)..."
 python -m tax_agent &
 
-# ── 4. Compliance Agent (port 10103)
-echo "[4/6] Starting Compliance Agent..."
+echo "[5/6] Starting Compliance Agent (port 19103)..."
 python -m compliance_agent &
 
-# ── 5. Customer Agent (port 10100) — last because it registers with registry
-echo "[5/6] Starting Customer Agent..."
+echo "[6/6] Starting Customer Agent (port 19100)..."
 python -m customer_agent &
 
-# Wait for all agents to be up before starting the proxy
-echo "Waiting for agents to initialise..."
-sleep 6
-
-# ── 6. Proxy / Frontend server (public $PORT, foreground)
-echo "[6/6] Starting Proxy Server on port ${PORT:-8080}..."
-exec python serve_render.py
+echo "=== All services started. Container stays alive with proxy PID $PROXY_PID ==="
+# Keep container alive as long as the proxy is running
+wait $PROXY_PID
