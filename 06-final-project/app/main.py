@@ -170,9 +170,7 @@ def ready():
     }
 
 
-@app.get("/hello")
-def hello():
-    return {"message": "Hello, World!"}
+
 
 
 @app.post("/ask", responses={401: {"description": "Missing or invalid API key"}, 429: {"description": "Rate limit exceeded"}, 402: {"description": "Monthly budget exceeded"}})
