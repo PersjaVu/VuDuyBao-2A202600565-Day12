@@ -1,11 +1,3 @@
-# ============================================================
-# CI Pipeline — runs on every push and pull request
-#
-# Jobs:
-#   1. test  — lint + unit tests (blocks deploy if fails)
-#   2. build — docker build smoke-test (blocks deploy if fails)
-#   3. deploy-notify — triggers Render deploy only when CI passes
-# ============================================================
 name: CI
 
 on:
@@ -14,10 +6,6 @@ on:
   pull_request:
     branches: [main]
 
-defaults:
-  run:
-    working-directory: 06-final-project
-
 jobs:
   # ──────────────────────────────────────────────────────────
   # Job 1: Lint + Test
@@ -25,13 +13,14 @@ jobs:
   test:
     name: Lint & Test
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: 06-final-project
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4.2.2
+      - uses: actions/checkout@v4.2.2
 
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v5.4.0
+      - uses: actions/setup-python@v5.4.0
         with:
           python-version: "3.11"
           cache: pip
@@ -40,12 +29,12 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements-dev.txt
 
-      - name: Lint with ruff
+      - name: Lint
         run: |
           pip install ruff
           ruff check app/ utils/ --select E,W,F --ignore E501
 
-      - name: Run tests
+      - name: Test
         env:
           AGENT_API_KEY: test-key-12345
           ENVIRONMENT: test
@@ -60,30 +49,30 @@ jobs:
   build:
     name: Docker Build
     runs-on: ubuntu-latest
-    needs: test  # only run if tests pass
+    needs: test
+    defaults:
+      run:
+        working-directory: 06-final-project
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4.2.2
+      - uses: actions/checkout@v4.2.2
 
       - name: Build Docker image
         run: docker build -t ai-agent-test:${{ github.sha }} .
 
-      - name: Smoke-test container health
+      - name: Smoke-test
         run: |
-          docker run -d \
-            --name smoke \
-            -p 8000:8000 \
+          docker run -d --name smoke -p 8000:8000 \
             -e AGENT_API_KEY=smoke-key \
             -e ENVIRONMENT=test \
             -e REDIS_URL="" \
             ai-agent-test:${{ github.sha }}
-          sleep 5
+          sleep 8
           curl -f http://localhost:8000/health || (docker logs smoke && exit 1)
           docker stop smoke
 
   # ──────────────────────────────────────────────────────────
-  # Job 3: Trigger Render deploy (only on main, only if CI passes)
+  # Job 3: Trigger Render deploy (only on main push, after CI passes)
   # ──────────────────────────────────────────────────────────
   deploy:
     name: Deploy to Render
@@ -92,9 +81,9 @@ jobs:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
 
     steps:
-      - name: Trigger Render deploy
+      - name: Trigger Render deploy hook
         run: |
-          curl -s -o /dev/null -w "%{http_code}" \
-            -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
-        # Set RENDER_DEPLOY_HOOK_URL in GitHub repo:
-        # Settings → Secrets → Actions → New repository secret
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}")
+          echo "Render response: $STATUS"
+          [ "$STATUS" = "200" ] || [ "$STATUS" = "201" ]

@@ -19,3 +19,9 @@ def test_ready_returns_200_when_up(client):
     r = client.get("/ready")
     assert r.status_code == 200
     assert r.json()["ready"] is True
+
+
+def test_hello_endpoint(client):
+    r = client.get("/hello")
+    assert r.status_code == 200
+    assert r.json()["message"] == "Hello, World!"
